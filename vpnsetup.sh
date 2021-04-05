@@ -22,35 +22,9 @@ vpnsetup() {
 os_type=$(lsb_release -si 2>/dev/null)
 os_arch=$(uname -m | tr -dc 'A-Za-z0-9_-')
 [ -z "$os_type" ] && [ -f /etc/os-release ] && os_type=$(. /etc/os-release && printf '%s' "$ID")
-#case $os_type in
-#  [Uu]buntu)
-#    os_type=ubuntu
-#    ;;
-#  [Dd]ebian)
-#    os_type=debian
-#    ;;
-#  [Rr]aspbian)
-#    os_type=raspbian
-#    ;;
-#  *)
-#    echo "Error: This script only supports Ubuntu and Debian." >&2
-#    echo "For CentOS/RHEL, use https://git.io/vpnsetup-centos" >&2
-#    exit 1
-#    ;;
-#esac
 os_type=ubuntu
 
 os_ver=$(sed 's/\..*//' /etc/debian_version | tr -dc 'A-Za-z0-9')
-#if [ "$os_ver" = "8" ] || [ "$os_ver" = "jessiesid" ]; then
-#  exiterr "Debian 8 or Ubuntu < 16.04 is not supported."
-#fi
-#if [ "$os_ver" = "10" ] && [ ! -e /dev/ppp ]; then
-#  exiterr "/dev/ppp is missing. Debian 10 users, see: https://git.io/vpndebian10"
-#fi
-#
-#if [ -f /proc/user_beancounters ]; then
-#  exiterr "OpenVZ VPS is not supported."
-#fi
 
 if [ "$(id -u)" != 0 ]; then
   exiterr "Script must be run as root. Try 'sudo sh $0'"
@@ -101,19 +75,11 @@ if [ -n "$VPN_IPSEC_PSK" ] && [ -z "$VPN_USER" ] && [ -z "$VPN_PASSWORD" ]; then
   VPN_IPSEC_PSK=$(LC_CTYPE=C tr -dc 'A-HJ-NPR-Za-km-z2-9' < /dev/urandom | head -c 20)
 fi
 
-#if [ -z "$VPN_IPSEC_PSK" ] || [ -z "$VPN_USER" ] || [ -z "$VPN_PASSWORD" ]; then
-#  exiterr "All VPN credentials must be specified. Edit the script and re-enter them."
-#fi
 
 if printf '%s' "$VPN_IPSEC_PSK $VPN_USER $VPN_PASSWORD" | LC_ALL=C grep -q '[^ -~]\+'; then
   exiterr "VPN credentials must not contain non-ASCII characters."
 fi
 
-#case "$VPN_IPSEC_PSK $VPN_USER $VPN_PASSWORD" in
-#  *[\\\"\']*)
-#    exiterr "VPN credentials must not contain these special characters: \\ \" '"
-#    ;;
-#esac
 
 if { [ -n "$VPN_DNS_SRV1" ] && ! check_ip "$VPN_DNS_SRV1"; } \
   || { [ -n "$VPN_DNS_SRV2" ] && ! check_ip "$VPN_DNS_SRV2"; } then
@@ -123,8 +89,6 @@ fi
 if [ -x /sbin/iptables ] && ! iptables -nL INPUT >/dev/null 2>&1; then
   exiterr "IPTables check failed. Reboot and re-run this script."
 fi
-
-#bigecho "VPN setup in progress... Please be patient."
 
 mkdir -p /opt/src
 cd /opt/src || exit 1
@@ -178,14 +142,6 @@ bigecho "Installing Fail2Ban to protect SSH..."
   set -x
   apt-get -yqq install fail2ban >/dev/null
 ) || exiterr2
-
-#bigecho "Downloading IKEv2 script..."
-#
-#ikev2_url="https://github.com/hwdsl2/setup-ipsec-vpn/raw/master/extras/ikev2setup.sh"
-#(
-#  set -x
-#  wget -t 3 -T 30 -q -O ikev2.sh "$ikev2_url"
-#) || /bin/rm -f ikev2.sh
 
 bigecho "Downloading Libreswan..."
 
